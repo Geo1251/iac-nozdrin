@@ -53,3 +53,14 @@ export VM_IP=$(yc compute instance get "$PREFIX-web-1" --format json \
 
 # --- Диагностика: какие машины остановлены (прерываемые может погасить облако) ---
 yc compute instance list --format json | jq -r '.[] | select(.status != "RUNNING") | .name'
+
+# --- Уборка: сначала машины, потом подсеть, потом сеть ---
+yc compute instance delete "$PREFIX-web-1"
+yc compute instance delete "$PREFIX-web-manual"
+yc vpc subnet delete "$PREFIX-subnet"
+yc vpc network delete "$PREFIX-net"
+
+# --- Проверка: машин, дисков и адресов нет, в сетях только default ---
+yc compute instance list
+yc compute disk list
+yc vpc network list
