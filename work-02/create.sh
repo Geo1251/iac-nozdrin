@@ -70,4 +70,4 @@ yc load-balancer network-load-balancer create \
   --name "$PREFIX-lb" \
   --region-id ru-central1 \
   --listener name=http,port=80,target-port="$APP_PORT",external-ip-version=ipv4 \
-  --target-group target-group-id="$TG_ID",healthcheck-name=http,healthcheck-interval=2s,healthcheck-timeout=1s,healthcheck-unhealthy-threshold=2,healthcheck-healthy-threshold=2,healthcheck-http-port="$APP_PORT",healthcheck-http-path=/
+  --target-group target-group-id="$TG_ID",healthcheck-name=http,healthcheck-interval=2s,healthcheck-timeout=1s,healthcheck-unhealthythreshold=2,healthcheck-healthythreshold=2,healthcheck-http-port="$APP_PORT",healthcheck-http-path=/
