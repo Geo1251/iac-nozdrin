@@ -22,3 +22,12 @@ runcmd:
   - bash -c 'echo "${GREETING} on $(hostname)" > /var/www/html/index.nginx-debian.html'
   - nginx -t                              # проверка конфигурации: опечатка вылезет здесь
   - systemctl restart nginx               # без перезапуска nginx остался бы на порту 80
+  # доп. диск: размечается и монтируется только там, где он подключён
+  - |
+    DEV=/dev/disk/by-id/virtio-data
+    if [ -b "$DEV" ]; then
+      blkid "$DEV" || mkfs.ext4 "$DEV"
+      mkdir -p /mnt/data
+      grep -q "$DEV" /etc/fstab || echo "$DEV /mnt/data ext4 defaults,nofail 0 2" >> /etc/fstab
+      mount -a
+    fi

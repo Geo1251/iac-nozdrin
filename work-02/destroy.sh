@@ -1,19 +1,32 @@
 #!/usr/bin/env bash
-set -euo pipefail              # стоп на первой ошибке и на пустой переменной
+# Практическая работа 2, вариант 03.
+# Снимает стенд в порядке, обратном созданию. Не падает, если часть ресурсов уже удалена:
+# удаляет только то, что существует, а настоящие ошибки удаления по-прежнему останавливают скрипт.
+set -euo pipefail
 
-PREFIX=nozdrin-03              # значения варианта
-VM_COUNT=2
+PREFIX=nozdrin-03
 
-# сначала то, что ссылается на другие ресурсы
-yc load-balancer network-load-balancer delete "$PREFIX-lb"
-yc load-balancer target-group delete "$PREFIX-tg"
+# удалить ресурс, если он есть: del <группа команд yc> <имя>
+del() {
+  local kind=$1 name=$2
+  if yc $kind get "$name" >/dev/null 2>&1; then
+    echo "Удаляю $name"
+    yc $kind delete "$name"
+  else
+    echo "$name уже нет"
+  fi
+}
 
-for i in $(seq 1 "$VM_COUNT"); do
-  yc compute instance delete "$PREFIX-app-$i"
+del "load-balancer network-load-balancer" "$PREFIX-lb"
+del "load-balancer target-group" "$PREFIX-tg"
+
+# машины не считаем по числу, а спрашиваем облако: сколько бы их ни создали
+for NAME in $(yc compute instance list --format json \
+              | jq -r --arg p "$PREFIX-app-" '.[] | select(.name | startswith($p)) | .name'); do
+  del "compute instance" "$NAME"
 done
 
-yc compute disk delete "$PREFIX-data"
-
-yc vpc subnet delete "$PREFIX-subnet-a"
-yc vpc subnet delete "$PREFIX-subnet-b"
-yc vpc network delete "$PREFIX-net"
+del "compute disk" "$PREFIX-data"
+del "vpc subnet" "$PREFIX-subnet-a"
+del "vpc subnet" "$PREFIX-subnet-b"
+del "vpc network" "$PREFIX-net"
